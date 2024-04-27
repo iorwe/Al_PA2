@@ -151,17 +151,17 @@ if __name__ == '__main__':
         print('Bidirectional: ', bidirectional)
     print('=============================')
 
-
-    
     # define the loss function
     criterion = nn.CrossEntropyLoss()
     # define the optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    # define the learning rate scheduler
     scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5,min_lr=1e-5)
 
     # move the model to the device
     model.to(device)
 
+    # create the directory to save the model
     os.makedirs("results", exist_ok=True)
     model_directory = os.path.join("results", model_name)
     os.makedirs(model_directory, exist_ok=True)
@@ -173,7 +173,8 @@ if __name__ == '__main__':
         model_filename = f"{model_name}_length_{sequence_length}_batch_{batch_size}_lr_{learning_rate}.pth"
     save_path = os.path.join(model_directory, model_filename)
     
-    if os.path.exists(save_path):
+    # check if the model exists
+    if os.path.exists(save_path) and if_train == "Y":
         print("Model exists")
         print("Do you want to overwrite the model? (Y/N)")
         choice = input()
@@ -200,15 +201,16 @@ if __name__ == '__main__':
 
         # train the model
         print("Start training...")
+        print('=============================')
         print('Epoch | Tr. Loss | Tr. Acc. | Tr. F-Score | Vaild Loss | Vaild Acc. | Vaild F-Score')
         print('------+----------+----------+-------------+------------+------------+--------------')
         for epoch in range(num_epochs):
             train_loss, train_accuracy, train_F_score = train(model, train_loader, optimizer, criterion, device)
             valid_loss, valid_accuracy, valid_F_score = validate(model, valid_loader, criterion, device)
             print('{:5d} | {:8.4f} | {:8.4f} | {:11.4f} | {:10.4f} | {:10.4f} | {:11.4f}'.format(epoch+1, train_loss, train_accuracy, train_F_score, valid_loss, valid_accuracy, valid_F_score))
-
+            # update the learning rate
             scheduler.step(valid_loss)
-
+            # save the model if the validation loss is the best
             if valid_accuracy > best_accury:
                 best_accury = valid_accuracy
                 checkpoint = {
@@ -216,13 +218,13 @@ if __name__ == '__main__':
                     'epoch': epoch,
                 }
                 torch.save(checkpoint, save_path)
-
+            # early stopping
             if abs(valid_loss - best_valid_loss) < min_loss:
                 count += 1
             else:
                 count = 0
                 best_valid_loss = valid_loss
-            
+                  
             if count == 10:
                 print("Early stopping")
                 break
@@ -263,6 +265,6 @@ if __name__ == '__main__':
         print('Hidden dim:    {}'.format(hidden_dim))
         print('Num layers:    {}'.format(num_layers))
         print('Bidirectional: {}'.format(bidirectional))
-    print('Accuracy:      {:.4f}'.format(test_accuracy))
+    print('Accuracy:      {:.2%}'.format(test_accuracy))
     print('F-Score:       {:.4f}'.format(test_F_score))
     print('=============================')
