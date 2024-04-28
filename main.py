@@ -130,11 +130,12 @@ if __name__ == '__main__':
         model = MLP(sequence_length)
     else:
         print("!!! INVALID MODEL !!!")
-        print("Please choose between 'cnn', 'rnn', 'lstm' and 'gru'")
+        print("Please choose between 'cnn', 'rnn', 'lstm' and 'gru', 'mlp'")
         exit(1)
     # choose the device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+    print("===================================================================================")
+    print("                      !!!!!!!  Model Configuration  !!!!!!!                        ")
     print('===================================================================================')
     print('Model:         ', model_name)
     print('Batch size:    ', batch_size)
@@ -152,15 +153,17 @@ if __name__ == '__main__':
         print('Bidirectional: ', bidirectional)
     print('===================================================================================')
 
-    # define the loss function
-    criterion = nn.CrossEntropyLoss()
-    # define the optimizer
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-    # define the learning rate scheduler
-    scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5,min_lr=1e-5)
-
-    # move the model to the device
-    model.to(device)
+    print("!!! Model created,please check the model configuration !!!")
+    print("Do you want to continue? (Y/N)")
+    choice = input()
+    if choice == "Y" or choice == "y":
+        print("continue")
+    elif choice == "N" or choice == "n":
+        print("!!! please check the model configuration and run the program again !!!")
+        exit(1)
+    else:
+        print("!!! Invalid choice !!!")
+        exit(1)
 
     # create the directory to save the model
     os.makedirs("results", exist_ok=True)
@@ -176,23 +179,37 @@ if __name__ == '__main__':
     
     # check if the model exists
     if os.path.exists(save_path) and if_train == "Y":
-        print("Model exists")
+        print("===================================================================================")
+        print("!!! MODEL ALREADY EXISTS !!!")
         print("Do you want to overwrite the model? (Y/N)")
         choice = input()
 
         if choice == "Y" or choice == "y":
+            print("Overwriting the model...")
             pass
         elif choice == "N" or choice == "n":
+            print("don't overwrite the model")
             if_train = "N"
         else:
-            print("Invalid choice")
+            print("!!! Invalid choice !!!")
             exit(1)
 
-    if if_train == "Y" or if_train == "y":
+    # define the loss function
+    criterion = nn.CrossEntropyLoss()
+    # define the optimizer
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    # define the learning rate scheduler
+    scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5,min_lr=1e-5)
+
+    # move the model to the device
+    model.to(device)
+
+    # train the model
+    if if_train == "Y" or if_train == "y":     
+        # load the data
         path=os.getcwd()
         path = os.path.join(path, "Dataset")
-        # load the data
-        print("Loading data...")
+        print("Loading data...")  
         train_dataset = TextDataset(path,"train.txt", sequence_length)
         train_loader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size)
         valid_dataset = TextDataset(path,"validation.txt", sequence_length)
@@ -227,6 +244,7 @@ if __name__ == '__main__':
 
         print("Training finished")
 
+    # test the model
     print("Start testing...")
     try:
         checkpoint = torch.load(save_path,map_location=device)
@@ -243,7 +261,6 @@ if __name__ == '__main__':
     test_dataset = TextDataset(path,"test.txt", sequence_length)
     test_loader = DataLoader(test_dataset, shuffle=True, batch_size=batch_size)
 
-    # test the model
     test_loss, test_accuracy, test_F_score = test(model, test_loader, criterion, device,test=True)
     print("Testing finished")
     print('===================================================================================')
