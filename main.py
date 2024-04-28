@@ -88,7 +88,7 @@ if __name__ == '__main__':
     parser.add_argument("-e", "--epochs", type=int, default=100, help="Number of epochs")
     parser.add_argument("-b", "--batch_size", type=int, default=64, help="Batch size")
     parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, help="Learning rate")
-    parser.add_argument("-sl","--sequence_length", type=int, default=50, help="Sequence length")
+    parser.add_argument("-sl","--sequence_length", type=int, default=64, help="Sequence length")
     parser.add_argument("-t","--train", type=str, default="Y", help="Train status: Y or N")
 
     # model cnn
