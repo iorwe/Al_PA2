@@ -2,6 +2,8 @@
 
 # PA2 **情感分析**实验报告
 
+代码链接：https://cloud.tsinghua.edu.cn/d/de8a5c41ed3546c5ac10/
+
 ## 一、模型介绍
 
 ### 1. MLP
