@@ -84,7 +84,7 @@ def test(model, valid_loader, criterion, device,test=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # model
-    parser.add_argument("-m", "--model", type=str, default="cnn", help="Model to train")
+    parser.add_argument("-m", "--model", type=str, default="mlp", help="Model to train")
     parser.add_argument("-e", "--epochs", type=int, default=100, help="Number of epochs")
     parser.add_argument("-b", "--batch_size", type=int, default=64, help="Batch size")
     parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, help="Learning rate")
@@ -92,11 +92,12 @@ if __name__ == '__main__':
     parser.add_argument("-t","--train", type=str, default="Y", help="Train status: Y or N")
 
     # model cnn
-    parser.add_argument("-nf","--num_filters", type=int, default=150, help="Number of filters in the first convolutional layer")
+    parser.add_argument("-nf","--num_filters", type=int, default=100, help="Number of filters in the first convolutional layer")
     parser.add_argument("-fz","--filter_size", type=int, nargs="+", default=[2,3,4], help="Filter size in the cnn")
 
-    # model rnn, lstm, gru
-    parser.add_argument("-hd","--hidden_dim", type=int, default=100, help="Hidden dimension in the rnn")
+    # model rnn, lstm, gru, mlp
+    parser.add_argument("-hd","--hidden_dim", type=int, default=100, help="Hidden dimension in the rnn or mlp")
+    # rnn, lstm, gru
     parser.add_argument("-nl","--num_layers", type=int, default=1, help="Number of layers in the rnn")
     parser.add_argument("-bi","--bidirectional", type=bool, default=False, help="Bidirectional in the rnn")
     args = parser.parse_args()
@@ -127,7 +128,7 @@ if __name__ == '__main__':
     elif model_name == "gru":
         model = GRU(hidden_dim, num_layers, bidirectional)
     elif model_name == "mlp":
-        model = MLP(sequence_length)
+        model = MLP(hidden_dim,sequence_length)
     else:
         print("!!! INVALID MODEL !!!")
         print("Please choose between 'cnn', 'rnn', 'lstm' and 'gru', 'mlp'")
@@ -174,7 +175,7 @@ if __name__ == '__main__':
     elif model_name == "rnn" or model_name == "lstm" or model_name == "gru":
         model_filename = f"{model_name}_hidden_{hidden_dim}_layers_{num_layers}_bidirectional_{bidirectional}_length_{sequence_length}_batch_{batch_size}_lr_{learning_rate}.pth"
     else:
-        model_filename = f"{model_name}_length_{sequence_length}_batch_{batch_size}_lr_{learning_rate}.pth"
+        model_filename = f"{model_name}_hidden_{hidden_dim}_length_{sequence_length}_batch_{batch_size}_lr_{learning_rate}.pth"
     save_path = os.path.join(model_directory, model_filename)
     
     # check if the model exists
@@ -236,13 +237,18 @@ if __name__ == '__main__':
             if early_stopping.early_stop:
                 print('===================================================================================')
                 print("!!! Early stopping at epoch ", epoch+1, " !!!")
-                print("Best valid loss:     {:.4f}".format(early_stopping.best_val_loss))
-                print("Best valid accuracy: {:.2%}".format(early_stopping.best_val_accuracy))
-                print("Best valid F-Score:  {:.4f}".format(early_stopping.best_val_Fscore))
-                print('===================================================================================')
                 break
-
-        print("Training finished")
+        
+        
+        print('===================================================================================')
+        print("!!! Training finished !!!")
+        print("Best model saved at ", save_path)
+        print("===================================================================================")
+        print("Best valid loss:     {:.4f}".format(early_stopping.best_val_loss))
+        print("Best valid accuracy: {:.2%}".format(early_stopping.best_val_accuracy))
+        print("Best valid F-Score:  {:.4f}".format(early_stopping.best_val_Fscore))
+        print('===================================================================================')
+        
 
     # test the model
     print("Start testing...")
