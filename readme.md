@@ -19,19 +19,20 @@
 
 - 默认使用隐藏层单元为**100**的**MLP**模型。
 - 训练前需要确认模型参数信息，如果已经存在训练好的模型会询问是否要重新训练模型。
-- 可以通过修改 `main.py` 中的参数来选择不同的模型和配置。
+- 可以通过-[]  []传入参数来选择不同的模型和配置。
 
 ## 可选参数
 
-| 命令        | 参数            |                    用途                    | 默认值  |
-| ----------- | :-------------- | :----------------------------------------: | ------- |
-| -m <str>    | model           | 选择模型，可选参数: cnn, rnn,lstm, gru,mlp | mlp     |
-| -e <int>    | epoch           |                最大迭代次数                | 100     |
-| -b <int>    | batch_size      |                  批量大小                  | 64      |
-| -lr <float> | learning_rate   |                   学习率                   | 0.01    |
-| -sl <int>   | sequence_length |                  句子词数                  | 64      |
-| -t <str>    | if_train        |     是否训练新模型，可选参数: Y/N(y/n)     | Y       |
-| -nf <int>   | num_filters     |             CNN模型卷积核个数              | 100     |
-| -fz <int>   | filter_size     |            CNN卷积核大小与数量             | [2,3,4] |
-| -hd <int>   | hidden_dim      |                   隐藏层                   |         |
-|             |                 |                                            |         |
+|    命令     |      参数       |                    用途                    | 默认值  |
+| :---------: | :-------------: | :----------------------------------------: | :-----: |
+|  -m <str>   |      model      | 选择模型，可选参数: cnn, rnn,lstm, gru,mlp |   mlp   |
+|  -e <int>   |      epoch      |                最大迭代次数                |   100   |
+|  -b <int>   |   batch_size    |                  批量大小                  |   64    |
+| -lr <float> |  learning_rate  |                   学习率                   |  0.01   |
+|  -sl <int>  | sequence_length |                  句子词数                  |   64    |
+|  -t <str>   |    if_train     |     是否训练新模型，可选参数: Y/N(y/n)     |    Y    |
+|  -nf <int>  |   num_filters   |           CNN模型每个卷积核数量            |   100   |
+|  -fz <int>  |   filter_size   |               CNN卷积核大小                | [2,3,4] |
+|  -hd <int>  |   hidden_dim    |                 隐藏层数量                 |   100   |
+|  -nl <int>  |   num_layers    |                RNN隐藏层数                 |    1    |
+| -bi <bool>  |  bidirectional  |                RNN是否双向                 |  Fasle  |

@@ -21,6 +21,7 @@ def train(model, train_loader, optimizer, criterion, device):
     train_loss = 0.
     train_tp, train_fp, train_tn, train_fn = 0.0, 0.0, 0.0, 0.0
     total_samples = 0.
+    train_precision, train_recall = 0.1, 0.1
 
     # Iterate over the training data
     for inputs, targets in tqdm.tqdm(train_loader,leave=False,desc='Training'):
@@ -42,9 +43,11 @@ def train(model, train_loader, optimizer, criterion, device):
     
     # Calculate the average loss and accuracy
     train_accuracy = (train_tp + train_tn) / total_samples
-    train_precision = train_tp / (train_tp + train_fp)
-    train_recall = train_tp / (train_tp + train_fn)
     train_loss = train_loss / total_samples
+    if train_tp != 0:
+        train_precision = train_tp / (train_tp + train_fp)
+        train_recall = train_tp / (train_tp + train_fn)
+    
     F_score = 2.0 * train_precision * train_recall / (train_precision + train_recall)
     return train_loss, train_accuracy, F_score
         
@@ -55,6 +58,7 @@ def test(model, valid_loader, criterion, device,test=False):
     valid_loss = 0.
     valid_tp, valid_fp, valid_tn, valid_fn = 0.0, 0.0, 0.0, 0.0
     total_samples = 0.
+    valid_precision, valid_recall = 0.1, 0.1
 
     with torch.no_grad():
         # Iterate over the validation data
@@ -74,9 +78,11 @@ def test(model, valid_loader, criterion, device,test=False):
 
     # Calculate the average loss and accuracy
     valid_accuracy = (valid_tp + valid_tn) / total_samples
-    valid_precision = valid_tp / (valid_tp + valid_fp)
-    valid_recall = valid_tp / (valid_tp + valid_fn)
     valid_loss = valid_loss / total_samples
+    if valid_tp != 0:
+        valid_precision = valid_tp / (valid_tp + valid_fp)
+        valid_recall = valid_tp / (valid_tp + valid_fn)
+    
     F_score = 2.0 * valid_precision * valid_recall / (valid_precision + valid_recall)
     return valid_loss, valid_accuracy, F_score
 
