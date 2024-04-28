@@ -152,6 +152,8 @@ if __name__ == '__main__':
         print('Hidden dim:    ', hidden_dim)
         print('Num layers:    ', num_layers)
         print('Bidirectional: ', bidirectional)
+    elif model_name == "mlp":
+        print('Hidden dim:    ', hidden_dim)
     print('===================================================================================')
 
     print("!!! Model created,please check the model configuration !!!")
@@ -174,7 +176,7 @@ if __name__ == '__main__':
         model_filename = f"{model_name}_filters_{num_filters}x{filter_sizes}_length_{sequence_length}_batch_{batch_size}_lr_{learning_rate}.pth"
     elif model_name == "rnn" or model_name == "lstm" or model_name == "gru":
         model_filename = f"{model_name}_hidden_{hidden_dim}_layers_{num_layers}_bidirectional_{bidirectional}_length_{sequence_length}_batch_{batch_size}_lr_{learning_rate}.pth"
-    else:
+    elif model_name == "mlp":
         model_filename = f"{model_name}_hidden_{hidden_dim}_length_{sequence_length}_batch_{batch_size}_lr_{learning_rate}.pth"
     save_path = os.path.join(model_directory, model_filename)
     
@@ -284,6 +286,8 @@ if __name__ == '__main__':
         print('Hidden dim:    {}'.format(hidden_dim))
         print('Num layers:    {}'.format(num_layers))
         print('Bidirectional: {}'.format(bidirectional))
+    elif model_name == "mlp":
+        print('Hidden dim:    {}'.format(hidden_dim))
     print('Accuracy:      {:.2%}'.format(test_accuracy))
     print('F-Score:       {:.4f}'.format(test_F_score))
     print('===================================================================================')
