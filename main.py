@@ -4,8 +4,9 @@ import os
 import argparse
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+import tqdm
 
-
+from src.earlystopping import EarlyStopping
 from src.dataset import TextDataset
 from src.model.cnn import CNN
 from src.model.rnn import RNN
@@ -22,7 +23,7 @@ def train(model, train_loader, optimizer, criterion, device):
     total_samples = 0.
 
     # Iterate over the training data
-    for inputs, targets in train_loader:
+    for inputs, targets in tqdm.tqdm(train_loader,leave=False,desc='Training'):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
         outputs = model(inputs)
@@ -47,7 +48,7 @@ def train(model, train_loader, optimizer, criterion, device):
     F_score = 2.0 * train_precision * train_recall / (train_precision + train_recall)
     return train_loss, train_accuracy, F_score
         
-def validate(model, valid_loader, criterion, device):
+def test(model, valid_loader, criterion, device,test=False):
     # Set the model to evaluation mode
     model.eval()
     # Initialize the running loss
@@ -57,7 +58,7 @@ def validate(model, valid_loader, criterion, device):
 
     with torch.no_grad():
         # Iterate over the validation data
-        for inputs, targets in valid_loader:
+        for inputs, targets in tqdm.tqdm(valid_loader,leave=False,desc=test*'Testing'+(not test)*'Validation'):
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = model(inputs)
             loss = criterion(outputs, targets)
@@ -134,7 +135,7 @@ if __name__ == '__main__':
     # choose the device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    print('=============================')
+    print('===================================================================================')
     print('Model:         ', model_name)
     print('Batch size:    ', batch_size)
     print('Epoch:         ', num_epochs)
@@ -149,7 +150,7 @@ if __name__ == '__main__':
         print('Hidden dim:    ', hidden_dim)
         print('Num layers:    ', num_layers)
         print('Bidirectional: ', bidirectional)
-    print('=============================')
+    print('===================================================================================')
 
     # define the loss function
     criterion = nn.CrossEntropyLoss()
@@ -178,17 +179,16 @@ if __name__ == '__main__':
         print("Model exists")
         print("Do you want to overwrite the model? (Y/N)")
         choice = input()
-        if choice == "Y":
+
+        if choice == "Y" or choice == "y":
             pass
-        else:
+        elif choice == "N" or choice == "n":
             if_train = "N"
+        else:
+            print("Invalid choice")
+            exit(1)
 
-    count = 0
-    best_valid_loss = float('inf')
-    best_accury = 0.0
-    min_loss = 1e-4
-
-    if if_train == "Y":
+    if if_train == "Y" or if_train == "y":
         path=os.getcwd()
         path = os.path.join(path, "Dataset")
         # load the data
@@ -201,32 +201,28 @@ if __name__ == '__main__':
 
         # train the model
         print("Start training...")
-        print('=============================')
+        print('===================================================================================')
         print('Epoch | Tr. Loss | Tr. Acc. | Tr. F-Score | Vaild Loss | Vaild Acc. | Vaild F-Score')
         print('------+----------+----------+-------------+------------+------------+--------------')
+
+        # early stopping
+        early_stopping = EarlyStopping(patience=10, delta=1e-4, path=save_path)
+
         for epoch in range(num_epochs):
             train_loss, train_accuracy, train_F_score = train(model, train_loader, optimizer, criterion, device)
-            valid_loss, valid_accuracy, valid_F_score = validate(model, valid_loader, criterion, device)
+            valid_loss, valid_accuracy, valid_F_score = test(model, valid_loader, criterion, device)
             print('{:5d} | {:8.4f} | {:8.4f} | {:11.4f} | {:10.4f} | {:10.4f} | {:11.4f}'.format(epoch+1, train_loss, train_accuracy, train_F_score, valid_loss, valid_accuracy, valid_F_score))
             # update the learning rate
             scheduler.step(valid_loss)
-            # save the model if the validation loss is the best
-            if valid_accuracy > best_accury:
-                best_accury = valid_accuracy
-                checkpoint = {
-                    'model': model.state_dict(),
-                    'epoch': epoch,
-                }
-                torch.save(checkpoint, save_path)
-            # early stopping
-            if abs(valid_loss - best_valid_loss) < min_loss:
-                count += 1
-            else:
-                count = 0
-                best_valid_loss = valid_loss
-                  
-            if count == 10:
-                print("Early stopping")
+            # check early stopping
+            early_stopping(valid_loss, valid_accuracy, valid_F_score, epoch, model)
+            if early_stopping.early_stop:
+                print('===================================================================================')
+                print("!!! Early stopping at epoch ", epoch+1, " !!!")
+                print("Best valid loss:     {:.4f}".format(early_stopping.best_val_loss))
+                print("Best valid accuracy: {:.2%}".format(early_stopping.best_val_accuracy))
+                print("Best valid F-Score:  {:.4f}".format(early_stopping.best_val_Fscore))
+                print('===================================================================================')
                 break
 
         print("Training finished")
@@ -248,11 +244,11 @@ if __name__ == '__main__':
     test_loader = DataLoader(test_dataset, shuffle=True, batch_size=batch_size)
 
     # test the model
-    test_loss, test_accuracy, test_F_score = validate(model, test_loader, criterion, device)
+    test_loss, test_accuracy, test_F_score = test(model, test_loader, criterion, device,test=True)
     print("Testing finished")
-
-    print('Result:')
-    print('=============================')
+    print('===================================================================================')
+    print('                        !!!!!!!  Test Results  !!!!!!!                             ')
+    print('===================================================================================')
     print('Model:         {}'.format(model_name))
     print('Batch size:    {}'.format(batch_size))
     print('Epoch:         {}'.format(checkpoint['epoch']))
@@ -267,4 +263,4 @@ if __name__ == '__main__':
         print('Bidirectional: {}'.format(bidirectional))
     print('Accuracy:      {:.2%}'.format(test_accuracy))
     print('F-Score:       {:.4f}'.format(test_F_score))
-    print('=============================')
+    print('===================================================================================')

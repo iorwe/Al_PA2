@@ -2,7 +2,7 @@ from torch.utils.data import Dataset
 from gensim.models import KeyedVectors
 import os
 import torch
-
+import tqdm
 
 class TextDataset(Dataset):
     def __init__(self, file_path, file_name,sentence_length):
@@ -13,7 +13,7 @@ class TextDataset(Dataset):
 
         with open(self.file_path, 'r') as file:
             data = file.readlines()
-            for line in data:
+            for line in tqdm.tqdm(data,leave=False,desc='Loading data'):
                 sentence = line.split()
                 label = int(sentence[0])
                 words = sentence[1:]
